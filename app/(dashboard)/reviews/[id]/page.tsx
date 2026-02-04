@@ -8,10 +8,10 @@ import { toast } from "sonner";
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
 import ImageUpload from "@/app/components/ui/image-upload";
+import { uploadFile } from "@/lib/upload";
 import { reviewService } from "@/services/reviewService";
 import Link from "next/link";
-import { Textarea } from "@/app/components/ui/textarea"; // Assume created or check previous step. 
-
+import { Textarea } from "@/app/components/ui/textarea";
 
 interface ReviewFormValues {
     author_name: string;
@@ -26,11 +26,15 @@ export default function ReviewFormPage() {
     const params = useParams();
     const router = useRouter();
     const [loading, setLoading] = useState(false);
+
+    // Local File State
+    const [authorImageFile, setAuthorImageFile] = useState<File | null>(null);
+
     const isNew = params.id === "new";
     const title = isNew ? "Create Review" : "Edit Review";
     const action = isNew ? "Create" : "Save changes";
 
-    const { register, control, handleSubmit, setValue, formState: { errors } } = useForm<ReviewFormValues>({
+    const { register, control, handleSubmit, setValue, watch, formState: { errors } } = useForm<ReviewFormValues>({
         defaultValues: {
             author_name: "",
             country: "",
@@ -63,11 +67,23 @@ export default function ReviewFormPage() {
     const onSubmit = async (data: ReviewFormValues) => {
         try {
             setLoading(true);
+
+            let authorImageUrl = data.author_profile_image;
+            if (authorImageFile) {
+                toast.info("Uploading author image...");
+                authorImageUrl = await uploadFile(authorImageFile);
+            }
+
+            const payload = {
+                ...data,
+                author_profile_image: authorImageUrl,
+            };
+
             if (isNew) {
-                await reviewService.create(data);
+                await reviewService.create(payload);
                 toast.success("Review created");
             } else {
-                await reviewService.update(params.id as string, data);
+                await reviewService.update(params.id as string, payload);
                 toast.success("Review updated");
             }
             router.push("/reviews");
@@ -117,9 +133,10 @@ export default function ReviewFormPage() {
                 <div className="space-y-2">
                     <label className="text-sm font-medium">Author Profile Image</label>
                     <ImageUpload
-                        value={control._formValues.author_profile_image}
+                        value={watch("author_profile_image")}
                         onChange={(url) => setValue("author_profile_image", url as string)}
                         onRemove={() => setValue("author_profile_image", "")}
+                        onFilesChange={(files) => setAuthorImageFile(files[0])}
                         disabled={loading}
                     />
                 </div>

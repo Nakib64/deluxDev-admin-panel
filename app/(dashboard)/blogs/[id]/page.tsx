@@ -3,19 +3,19 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useForm, useFieldArray } from "react-hook-form";
-import { Trash, Plus, Save, ArrowLeft } from "lucide-react";
+import { Trash, Plus, Save, ArrowLeft, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
 import ImageUpload from "@/app/components/ui/image-upload";
+import { uploadFile } from "@/lib/upload";
 import { blogService } from "@/services/blogService";
 import Link from "next/link";
-import { Textarea } from "@/app/components/ui/textarea"; // Need this or separate file, I'll use standard textarea or create component
-
+import { Textarea } from "@/app/components/ui/textarea";
 
 interface BlogFormValues {
     title: string;
-    title_animation: string; // JSON string for edit convenience
+    title_animation: string;
     cover_image: string;
     description: { key: string; value: string }[];
     author_name: string;
@@ -27,11 +27,16 @@ export default function BlogFormPage() {
     const params = useParams();
     const router = useRouter();
     const [loading, setLoading] = useState(false);
+
+    // Local File State
+    const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
+    const [authorImageFile, setAuthorImageFile] = useState<File | null>(null);
+
     const isNew = params.id === "new";
     const title = isNew ? "Create Blog" : "Edit Blog";
     const action = isNew ? "Create" : "Save changes";
 
-    const { register, control, handleSubmit, setValue, formState: { errors } } = useForm<BlogFormValues>({
+    const { register, control, handleSubmit, setValue, watch, formState: { errors } } = useForm<BlogFormValues>({
         defaultValues: {
             title: "",
             title_animation: "{}",
@@ -79,6 +84,19 @@ export default function BlogFormPage() {
         try {
             setLoading(true);
 
+            // 1. Upload Images
+            let coverImageUrl = data.cover_image;
+            if (coverImageFile) {
+                toast.info("Uploading cover image...");
+                coverImageUrl = await uploadFile(coverImageFile);
+            }
+
+            let authorImageUrl = data.author_profile_image;
+            if (authorImageFile) {
+                toast.info("Uploading author image...");
+                authorImageUrl = await uploadFile(authorImageFile);
+            }
+
             let parsedAnimation = {};
             try {
                 parsedAnimation = JSON.parse(data.title_animation);
@@ -96,12 +114,12 @@ export default function BlogFormPage() {
             const payload = {
                 title: data.title,
                 slug: data.slug,
-                cover_image: data.cover_image,
+                cover_image: coverImageUrl,
                 title_animation: parsedAnimation,
                 description: descriptionMap,
                 author_details: {
                     name: data.author_name,
-                    profile_image: data.author_profile_image,
+                    profile_image: authorImageUrl,
                 }
             };
 
@@ -159,13 +177,45 @@ export default function BlogFormPage() {
                     </div>
                     <div className="space-y-2">
                         <label className="text-sm font-medium">Title Animation (Lottie JSON)</label>
-                        <Textarea
-                            rows={5}
-                            disabled={loading}
-                            placeholder="{ ... }"
-                            {...register("title_animation", { required: true })}
-                        />
-                        {errors.title_animation && <span className="text-red-500 text-xs">Required</span>}
+                        <div className="flex items-center gap-4">
+                            <Button
+                                type="button"
+                                variant="secondary"
+                                onClick={() => document.getElementById("lottie-upload")?.click()}
+                            >
+                                <Upload className="h-4 w-4 mr-2" />
+                                {watch("title_animation") && watch("title_animation") !== "{}" ? "Change JSON" : "Upload JSON"}
+                            </Button>
+                            <input
+                                id="lottie-upload"
+                                type="file"
+                                accept="application/json"
+                                className="hidden"
+                                onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                        const reader = new FileReader();
+                                        reader.onload = (event) => {
+                                            const result = event.target?.result as string;
+                                            try {
+                                                JSON.parse(result); // Validate JSON
+                                                setValue("title_animation", result);
+                                                toast.success("Lottie JSON loaded");
+                                            } catch (err) {
+                                                toast.error("Invalid JSON file");
+                                            }
+                                        };
+                                        reader.readAsText(file);
+                                    }
+                                }}
+                            />
+                            <span className="text-sm text-muted-foreground">
+                                {watch("title_animation") && watch("title_animation") !== "{}"
+                                    ? "Animation data loaded"
+                                    : "No animation selected"}
+                            </span>
+                        </div>
+                        {/* Hidden Textarea for debug or form submission requirement if needed, but setValue handles it */}
                     </div>
                 </div>
 
@@ -174,9 +224,10 @@ export default function BlogFormPage() {
                     <div className="space-y-2">
                         <label className="text-sm font-medium">Cover Image</label>
                         <ImageUpload
-                            value={control._formValues.cover_image}
+                            value={watch("cover_image")}
                             onChange={(url) => setValue("cover_image", url as string)}
                             onRemove={() => setValue("cover_image", "")}
+                            onFilesChange={(files) => setCoverImageFile(files[0])}
                             disabled={loading}
                         />
                     </div>
@@ -188,8 +239,9 @@ export default function BlogFormPage() {
                         <div className="space-y-2">
                             <label className="text-sm font-medium">Author Profile Image</label>
                             <ImageUpload
-                                value={control._formValues.author_profile_image}
+                                value={watch("author_profile_image")}
                                 onChange={(url) => setValue("author_profile_image", url as string)}
+                                onFilesChange={(files) => setAuthorImageFile(files[0])}
                                 onRemove={() => setValue("author_profile_image", "")}
                                 disabled={loading}
                             />

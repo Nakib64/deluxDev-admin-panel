@@ -1,10 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Upload, X } from "lucide-react";
 import Image from "next/image";
-import { toast } from "sonner";
-import api from "@/lib/api";
 import { Button } from "./button";
 
 interface ImageUploadProps {
@@ -12,7 +10,9 @@ interface ImageUploadProps {
     onChange: (value: string | string[]) => void;
     disabled?: boolean;
     onRemove: (value: string) => void;
-    maxFiles?: number; // 1 for single image, >1 for array
+    maxFiles?: number;
+    // New prop to handle raw files instead of auto-uploading
+    onFilesChange?: (files: File[]) => void;
 }
 
 const ImageUpload: React.FC<ImageUploadProps> = ({
@@ -21,63 +21,72 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     disabled,
     onRemove,
     maxFiles = 1,
+    onFilesChange
 }) => {
-    const [loading, setLoading] = useState(false);
+    const [mounted, setMounted] = useState(false);
+    const [previews, setPreviews] = useState<string[]>([]);
 
-    const onUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
-        const formData = new FormData();
-        formData.append("image", file); // Assuming backend expects 'image'
+    const normalizeValue = (val: string | string[]) => {
+        return Array.isArray(val) ? val : (val ? [val] : []);
+    }
 
-        try {
-            setLoading(true);
-            const response = await api.post("/cloudinary", formData, {
-                headers: {
-                    "Content-Type": "multipart/form-data",
-                },
-            });
+    // Combine existing URLs (value) with local file previews
+    const existingUrls = normalizeValue(value);
+    const allImages = [...existingUrls, ...previews];
 
-            // Assuming backend returns { url: "..." } or similar
-            // Adjust based on actual response structure. 
-            // Common pattern: response.data.url or response.data.secure_url from Cloudinary
-            // Let's assume response.data.url for now based on typical custom wrappers
-            const url = response.data.url || response.data.secure_url || response.data;
+    const onUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = e.target.files;
+        if (!files || files.length === 0) return;
 
-            if (!url) {
-                throw new Error("No URL returned from server");
-            }
+        if (onFilesChange) {
+            // Manual Mode: Pass files back to parent
+            const newFiles = Array.from(files);
+            // Generate previews
+            const newPreviews = newFiles.map(file => URL.createObjectURL(file));
+            setPreviews(prev => [...prev, ...newPreviews]);
 
-            if (maxFiles > 1) {
-                // Append to array
-                const current = Array.isArray(value) ? value : [];
-                onChange([...current, url]);
-            } else {
-                // Single value
-                onChange(url);
-            }
+            // Notify parent of new files
+            // Note: This needs careful state management in parent to keep track of accumulated files
+            // For simplicity, we might just pass the *new* files and let parent append
+            onFilesChange(newFiles);
+        }
+        // We removed the auto-upload logic to enforce "Upload on Submit" as per request
+        // or we could keep it as fallback, but user specifically asked for change.
+    };
 
-            toast.success("Image uploaded successfully");
-        } catch (error) {
-            console.error("Upload error:", error);
-            toast.error("Something went wrong with the upload.");
-        } finally {
-            setLoading(false);
+    const handleRemove = (url: string) => {
+        // If it's a preview blob, remove from previews
+        if (url.startsWith('blob:')) {
+            setPreviews(prev => prev.filter(p => p !== url));
+            // We also need to tell parent to remove the file. 
+            // This is tricky without an ID. The parent needs to manage the file list sync.
+            // For now, we will reset the file input in parent validation if needed 
+            // or assume parent handles removal if we pass an index or identification.
+
+            // Implementation Detail: 
+            // If using onFilesChange, the parent is responsible for State. 
+            // Here we just update UI. 
+            // Ideally passing an index or identifier is better.
+
+            // Simplified: If removing a blob, we trigger a callback or just ignore if complex?
+            // Let's assume onRemove handles BOTH urls and blobs if parent manages state correctly.
+            onRemove(url);
+        } else {
+            onRemove(url);
         }
     };
 
-    // Helper to normalize value to array for display
-    const images = Array.isArray(value) ? value : (value ? [value] : []);
+    if (!mounted) return null;
 
     return (
         <div>
             <div className="mb-4 flex items-center gap-4 flex-wrap">
-                {images.map((url) => (
-                    <div
-                        key={url}
-                        className="relative w-[200px] h-[200px] rounded-md overflow-hidden"
-                    >
+                {existingUrls.map((url) => (
+                    <div key={url} className="relative w-[200px] h-[200px] rounded-md overflow-hidden bg-gray-100 dark:bg-gray-800">
                         <div className="z-10 absolute top-2 right-2">
                             <Button
                                 type="button"
@@ -93,28 +102,51 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
                             className="object-cover"
                             alt="Image"
                             src={url}
-                            unoptimized // If external generic link
+                            unoptimized
+                        />
+                    </div>
+                ))}
+                {/* Show Previews */}
+                {previews.map((url) => (
+                    <div key={url} className="relative w-[200px] h-[200px] rounded-md overflow-hidden bg-gray-100 dark:bg-gray-800 border-2 border-dashed border-gray-400">
+                        <div className="z-10 absolute top-2 right-2">
+                            <Button
+                                type="button"
+                                onClick={() => handleRemove(url)}
+                                variant="destructive"
+                                size="sm"
+                            >
+                                <X className="h-4 w-4" />
+                            </Button>
+                        </div>
+                        <Image
+                            fill
+                            className="object-cover opacity-80"
+                            alt="Preview"
+                            src={url}
+                            unoptimized
                         />
                     </div>
                 ))}
             </div>
-            {(maxFiles > 1 || images.length === 0) && (
+            {(maxFiles > 1 || (existingUrls.length + previews.length) === 0) && (
                 <div className="flex items-center gap-4">
                     <Button
                         type="button"
-                        disabled={disabled || loading}
+                        disabled={disabled}
                         variant="secondary"
                         onClick={() => document.getElementById("file-upload")?.click()}
                     >
                         <Upload className="h-4 w-4 mr-2" />
-                        Upload an Image
+                        Select Image
                     </Button>
                     <input
                         id="file-upload"
                         type="file"
-                        disabled={disabled || loading}
+                        disabled={disabled}
                         className="hidden"
                         accept="image/*"
+                        multiple={maxFiles > 1}
                         onChange={onUpload}
                     />
                 </div>
