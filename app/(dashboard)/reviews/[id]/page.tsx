@@ -18,7 +18,9 @@ interface ReviewFormValues {
     country: string;
     rating: number;
     title_project: string;
+    title_project_zh: string;
     review: string;
+    review_zh: string;
     author_profile_image: string;
 }
 
@@ -40,7 +42,9 @@ export default function ReviewFormPage() {
             country: "",
             rating: 5,
             title_project: "",
+            title_project_zh: "",
             review: "",
+            review_zh: "",
             author_profile_image: "",
         },
     });
@@ -54,7 +58,9 @@ export default function ReviewFormPage() {
                     setValue("country", data.country || "");
                     setValue("rating", data.rating);
                     setValue("title_project", data.title_project);
+                    setValue("title_project_zh", data.title_project_zh || "");
                     setValue("review", data.review);
+                    setValue("review_zh", data.review_zh || "");
                     setValue("author_profile_image", data.author_profile_image || "");
                 })
                 .catch(() => {
@@ -68,22 +74,24 @@ export default function ReviewFormPage() {
         try {
             setLoading(true);
 
-            let authorImageUrl = data.author_profile_image;
+            const formData = new FormData();
+            formData.append("author_name", data.author_name);
+            formData.append("country", data.country);
+            formData.append("rating", data.rating.toString());
+            formData.append("title_project", data.title_project);
+            formData.append("title_project_zh", data.title_project_zh);
+            formData.append("review", data.review);
+            formData.append("review_zh", data.review_zh);
+
             if (authorImageFile) {
-                toast.info("Uploading author image...");
-                authorImageUrl = await uploadFile(authorImageFile);
+                formData.append("author_profile_image", authorImageFile);
             }
 
-            const payload = {
-                ...data,
-                author_profile_image: authorImageUrl,
-            };
-
             if (isNew) {
-                await reviewService.create(payload);
+                await reviewService.create(formData);
                 toast.success("Review created");
             } else {
-                await reviewService.update(params.id as string, payload);
+                await reviewService.update(params.id as string, formData);
                 toast.success("Review updated");
             }
             router.push("/reviews");
@@ -141,10 +149,17 @@ export default function ReviewFormPage() {
                     />
                 </div>
 
-                <div className="space-y-2">
-                    <label className="text-sm font-medium">Project Title</label>
-                    <Input disabled={loading} placeholder="Project Title" {...register("title_project", { required: true })} />
-                    {errors.title_project && <span className="text-red-500 text-xs">Required</span>}
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium">Project Title (English)</label>
+                        <Input disabled={loading} placeholder="Project Title" {...register("title_project", { required: true })} />
+                        {errors.title_project && <span className="text-red-500 text-xs">Required</span>}
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium">Project Title (Chinese)</label>
+                        <Input disabled={loading} placeholder="项目名称" {...register("title_project_zh", { required: true })} />
+                        {errors.title_project_zh && <span className="text-red-500 text-xs">Required</span>}
+                    </div>
                 </div>
 
                 <div className="space-y-2">
@@ -159,7 +174,7 @@ export default function ReviewFormPage() {
                 </div>
 
                 <div className="space-y-2">
-                    <label className="text-sm font-medium">Review</label>
+                    <label className="text-sm font-medium">Review (English)</label>
                     <Textarea
                         rows={4}
                         disabled={loading}
@@ -167,6 +182,17 @@ export default function ReviewFormPage() {
                         {...register("review", { required: true })}
                     />
                     {errors.review && <span className="text-red-500 text-xs">Required</span>}
+                </div>
+
+                <div className="space-y-2">
+                    <label className="text-sm font-medium">Review (Chinese)</label>
+                    <Textarea
+                        rows={4}
+                        disabled={loading}
+                        placeholder="评价内容..."
+                        {...register("review_zh", { required: true })}
+                    />
+                    {errors.review_zh && <span className="text-red-500 text-xs">Required</span>}
                 </div>
 
             </div>

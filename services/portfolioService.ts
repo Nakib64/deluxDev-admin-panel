@@ -4,9 +4,11 @@ export interface Portfolio {
     _id: string;
     title: string;
     description: string;
+    title_zh: string;
+    description_zh: string;
     title_image: string;
     images: string[];
-    technologies: Record<string, string>;
+    technologies: { name: string; image: string }[];
     live_link?: string;
     github_link?: string;
     createdAt: string;

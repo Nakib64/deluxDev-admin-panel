@@ -30,6 +30,12 @@ const routes = [
         href: "/reviews",
         color: "text-orange-700",
     },
+    {
+        label: "Tech Stack",
+        icon: Settings,
+        href: "/tech",
+        color: "text-emerald-500",
+    },
 ];
 
 const Sidebar = () => {

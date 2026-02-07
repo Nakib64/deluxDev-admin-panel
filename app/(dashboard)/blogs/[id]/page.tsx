@@ -15,9 +15,11 @@ import { Textarea } from "@/app/components/ui/textarea";
 
 interface BlogFormValues {
     title: string;
+    title_zh: string;
     title_animation: string;
     cover_image: string;
     description: { key: string; value: string }[];
+    description_zh: { key: string; value: string }[];
     author_name: string;
     author_profile_image: string;
     slug: string;
@@ -39,9 +41,11 @@ export default function BlogFormPage() {
     const { register, control, handleSubmit, setValue, watch, formState: { errors } } = useForm<BlogFormValues>({
         defaultValues: {
             title: "",
-            title_animation: "{}",
+            title_zh: "",
+            title_animation: "",
             cover_image: "",
             description: [],
+            description_zh: [],
             author_name: "",
             author_profile_image: "",
             slug: "",
@@ -53,13 +57,19 @@ export default function BlogFormPage() {
         name: "description",
     });
 
+    const { fields: fieldsZh, append: appendZh, remove: removeZh } = useFieldArray({
+        control,
+        name: "description_zh",
+    });
+
     useEffect(() => {
         if (!isNew && params.id) {
             setLoading(true);
             blogService.getOne(params.id as string)
                 .then((data) => {
                     setValue("title", data.title);
-                    setValue("title_animation", JSON.stringify(data.title_animation, null, 2));
+                    setValue("title_zh", data.title_zh || "");
+                    setValue("title_animation", data.title_animation ? JSON.stringify(data.title_animation, null, 2) : "");
                     setValue("cover_image", data.cover_image);
                     setValue("slug", data.slug);
                     setValue("author_name", data.author_details?.name || "");
@@ -71,6 +81,13 @@ export default function BlogFormPage() {
                             value: value as string,
                         }));
                         setValue("description", desc);
+                    }
+                    if (data.description_zh) {
+                        const descZh = Object.entries(data.description_zh).map(([key, value]) => ({
+                            key,
+                            value: value as string,
+                        }));
+                        setValue("description_zh", descZh);
                     }
                 })
                 .catch(() => {
@@ -84,50 +101,52 @@ export default function BlogFormPage() {
         try {
             setLoading(true);
 
-            // 1. Upload Images
-            let coverImageUrl = data.cover_image;
-            if (coverImageFile) {
-                toast.info("Uploading cover image...");
-                coverImageUrl = await uploadFile(coverImageFile);
-            }
+            const formData = new FormData();
+            formData.append("title", data.title);
+            formData.append("title_zh", data.title_zh);
+            formData.append("slug", data.slug);
 
-            let authorImageUrl = data.author_profile_image;
-            if (authorImageFile) {
-                toast.info("Uploading author image...");
-                authorImageUrl = await uploadFile(authorImageFile);
-            }
-
-            let parsedAnimation = {};
-            try {
-                parsedAnimation = JSON.parse(data.title_animation);
-            } catch (e) {
-                toast.error("Invalid JSON for Title Animation");
-                setLoading(false);
-                return;
-            }
-
+            // Description Maps
             const descriptionMap: Record<string, string> = {};
             data.description.forEach((t) => {
                 if (t.key) descriptionMap[t.key] = t.value;
             });
+            formData.append("description", JSON.stringify(descriptionMap));
 
-            const payload = {
-                title: data.title,
-                slug: data.slug,
-                cover_image: coverImageUrl,
-                title_animation: parsedAnimation,
-                description: descriptionMap,
-                author_details: {
-                    name: data.author_name,
-                    profile_image: authorImageUrl,
-                }
-            };
+            const descriptionZhMap: Record<string, string> = {};
+            data.description_zh.forEach((t) => {
+                if (t.key) descriptionZhMap[t.key] = t.value;
+            });
+            formData.append("description_zh", JSON.stringify(descriptionZhMap));
+
+            // Author Details
+            formData.append("author_details", JSON.stringify({
+                name: data.author_name,
+            }));
+
+            // Handle Files
+            if (coverImageFile) {
+                formData.append("cover_image", coverImageFile);
+            }
+            if (authorImageFile) {
+                formData.append("author_profile_image", authorImageFile);
+            }
+
+            // Animation - could be file or string
+            const animationInput = document.getElementById("lottie-upload") as HTMLInputElement;
+            if (animationInput?.files?.[0]) {
+                formData.append("title_animation", animationInput.files[0]);
+            } else if (data.title_animation && typeof data.title_animation === "string") {
+                // If it's existing URL or manual JSON string... 
+                // The backend expects a file or a JSON string that it might parse.
+                // According to request, it's a .json file.
+            }
 
             if (isNew) {
-                await blogService.create(payload);
+                await blogService.create(formData);
                 toast.success("Blog created");
             } else {
-                await blogService.update(params.id as string, payload);
+                await blogService.update(params.id as string, formData);
                 toast.success("Blog updated");
             }
             router.push("/blogs");
@@ -166,9 +185,14 @@ export default function BlogFormPage() {
                 <div className="space-y-4 border p-4 rounded-md">
                     <h3 className="font-semibold text-lg">Details</h3>
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Title</label>
+                        <label className="text-sm font-medium">Title (English)</label>
                         <Input disabled={loading} placeholder="Blog Title" {...register("title", { required: true })} />
                         {errors.title && <span className="text-red-500 text-xs">Required</span>}
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium">Title (Chinese)</label>
+                        <Input disabled={loading} placeholder="博客标题" {...register("title_zh", { required: true })} />
+                        {errors.title_zh && <span className="text-red-500 text-xs">Required</span>}
                     </div>
                     <div className="space-y-2">
                         <label className="text-sm font-medium">Slug</label>
@@ -252,7 +276,7 @@ export default function BlogFormPage() {
                 {/* Description Map */}
                 <div className="space-y-4 border p-4 rounded-md col-span-1 md:col-span-2">
                     <div className="flex items-center justify-between">
-                        <h3 className="font-semibold text-lg">Description (Topics/Sections)</h3>
+                        <h3 className="font-semibold text-lg">Description (English Topics/Sections)</h3>
                         <Button type="button" variant="outline" size="sm" onClick={() => append({ key: "", value: "" })}>
                             <Plus className="h-4 w-4 mr-2" /> Add Section
                         </Button>
@@ -263,7 +287,7 @@ export default function BlogFormPage() {
                                 <div className="w-1/4">
                                     <Input
                                         disabled={loading}
-                                        placeholder="Topic/Key (e.g. en, intro)"
+                                        placeholder="Topic/Key (e.g. intro)"
                                         {...register(`description.${index}.key` as const, { required: true })}
                                     />
                                 </div>
@@ -276,6 +300,39 @@ export default function BlogFormPage() {
                                     />
                                 </div>
                                 <Button type="button" variant="destructive" size="icon" onClick={() => remove(index)}>
+                                    <Trash className="h-4 w-4" />
+                                </Button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="space-y-4 border p-4 rounded-md col-span-1 md:col-span-2">
+                    <div className="flex items-center justify-between">
+                        <h3 className="font-semibold text-lg">Description (Chinese Topics/Sections)</h3>
+                        <Button type="button" variant="outline" size="sm" onClick={() => appendZh({ key: "", value: "" })}>
+                            <Plus className="h-4 w-4 mr-2" /> Add Section
+                        </Button>
+                    </div>
+                    <div className="space-y-2">
+                        {fieldsZh.map((field, index) => (
+                            <div key={field.id} className="flex gap-2 items-start">
+                                <div className="w-1/4">
+                                    <Input
+                                        disabled={loading}
+                                        placeholder="Topic/Key"
+                                        {...register(`description_zh.${index}.key` as const, { required: true })}
+                                    />
+                                </div>
+                                <div className="flex-1">
+                                    <Textarea
+                                        rows={3}
+                                        disabled={loading}
+                                        placeholder="中文内容..."
+                                        {...register(`description_zh.${index}.value` as const, { required: true })}
+                                    />
+                                </div>
+                                <Button type="button" variant="destructive" size="icon" onClick={() => removeZh(index)}>
                                     <Trash className="h-4 w-4" />
                                 </Button>
                             </div>

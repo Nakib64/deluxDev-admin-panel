@@ -7,6 +7,7 @@ import { Save, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/app/components/ui/button";
 import { portfolioService } from "@/services/portfolioService";
+import { techService, Tech } from "@/services/techService";
 import Link from "next/link";
 import { uploadFile } from "@/lib/upload";
 
@@ -19,9 +20,11 @@ import { LinksSection } from "@/app/components/portfolio/LinksSection";
 interface PortfolioFormValues {
     title: string;
     description: string;
+    title_zh: string;
+    description_zh: string;
     title_image: string;
     images: string[];
-    technologies: { key: string; value: string }[];
+    technologies: { name: string; image: string }[];
     live_link: string;
     github_link: string;
 }
@@ -30,6 +33,7 @@ export default function PortfolioFormPage() {
     const params = useParams();
     const router = useRouter();
     const [loading, setLoading] = useState(false);
+    const [availableTechs, setAvailableTechs] = useState<Tech[]>([]);
 
     // Local File State
     const [titleImageFile, setTitleImageFile] = useState<File | null>(null);
@@ -43,6 +47,8 @@ export default function PortfolioFormPage() {
         defaultValues: {
             title: "",
             description: "",
+            title_zh: "",
+            description_zh: "",
             title_image: "",
             images: [],
             technologies: [],
@@ -52,23 +58,28 @@ export default function PortfolioFormPage() {
     });
 
     useEffect(() => {
+        // Fetch Available Techs
+        setLoading(true);
+        techService.getAll()
+            .then(setAvailableTechs)
+            .catch(() => toast.error("Failed to fetch tech stack"))
+            .finally(() => setLoading(false));
+
         if (!isNew && params.id) {
             setLoading(true);
             portfolioService.getOne(params.id as string)
                 .then((data) => {
                     setValue("title", data.title);
                     setValue("description", data.description);
+                    setValue("title_zh", data.title_zh || "");
+                    setValue("description_zh", data.description_zh || "");
                     setValue("title_image", data.title_image);
                     setValue("images", data.images || []);
                     setValue("live_link", data.live_link || "");
                     setValue("github_link", data.github_link || "");
 
                     if (data.technologies) {
-                        const techs = Object.entries(data.technologies).map(([key, value]) => ({
-                            key,
-                            value: value as string,
-                        }));
-                        setValue("technologies", techs);
+                        setValue("technologies", data.technologies);
                     }
                 })
                 .catch(() => {
@@ -97,16 +108,10 @@ export default function PortfolioFormPage() {
             }
 
             // 2. Payload
-            const technologiesMap: Record<string, string> = {};
-            data.technologies.forEach((t) => {
-                if (t.key) technologiesMap[t.key] = t.value;
-            });
-
             const payload = {
                 ...data,
                 title_image: titleImageUrl,
                 images: galleryUrls,
-                technologies: technologiesMap,
             };
 
             // 3. Submit
@@ -165,6 +170,7 @@ export default function PortfolioFormPage() {
                     loading={loading}
                     control={control}
                     register={register}
+                    availableTechs={availableTechs}
                 />
 
                 <LinksSection

@@ -1,40 +1,36 @@
 import api from "@/lib/api";
 
-export interface Review {
+export interface Tech {
     _id: string;
-    author_name: string;
-    country: string;
-    rating: number;
-    title_project: string;
-    review: string;
-    author_profile_image: string;
+    name: string;
+    icon: string;
     createdAt: string;
     updatedAt: string;
 }
 
-export const reviewService = {
+export const techService = {
     getAll: async () => {
-        const response = await api.get("/reviews");
+        const response = await api.get("/tech");
         return response.data.data || response.data;
     },
     getOne: async (id: string) => {
-        const response = await api.get(`/reviews/${id}`);
+        const response = await api.get(`/tech/${id}`);
         return response.data.data || response.data;
     },
     create: async (formData: FormData) => {
-        const response = await api.post("/reviews", formData, {
+        const response = await api.post("/tech", formData, {
             headers: { "Content-Type": "multipart/form-data" },
         });
         return response.data;
     },
     update: async (id: string, formData: FormData) => {
-        const response = await api.put(`/reviews/${id}`, formData, {
+        const response = await api.put(`/tech/${id}`, formData, {
             headers: { "Content-Type": "multipart/form-data" },
         });
         return response.data;
     },
     delete: async (id: string) => {
-        const response = await api.delete(`/reviews/${id}`);
+        const response = await api.delete(`/tech/${id}`);
         return response.data;
     },
 };

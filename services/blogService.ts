@@ -24,12 +24,16 @@ export const blogService = {
         const response = await api.get(`/blogs/${id}`);
         return response.data.data || response.data;
     },
-    create: async (data: Partial<Blog>) => {
-        const response = await api.post("/blogs", data);
+    create: async (formData: FormData) => {
+        const response = await api.post("/blogs", formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+        });
         return response.data;
     },
-    update: async (id: string, data: Partial<Blog>) => {
-        const response = await api.put(`/blogs/${id}`, data);
+    update: async (id: string, formData: FormData) => {
+        const response = await api.put(`/blogs/${id}`, formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+        });
         return response.data;
     },
     delete: async (id: string) => {
