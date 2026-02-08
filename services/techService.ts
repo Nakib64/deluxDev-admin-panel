@@ -4,6 +4,7 @@ export interface Tech {
     _id: string;
     name: string;
     icon: string;
+    category: string;
     createdAt: string;
     updatedAt: string;
 }
@@ -17,16 +18,12 @@ export const techService = {
         const response = await api.get(`/tech/${id}`);
         return response.data.data || response.data;
     },
-    create: async (formData: FormData) => {
-        const response = await api.post("/tech", formData, {
-            headers: { "Content-Type": "multipart/form-data" },
-        });
+    create: async (data: Partial<Tech>) => {
+        const response = await api.post("/tech", data);
         return response.data;
     },
-    update: async (id: string, formData: FormData) => {
-        const response = await api.put(`/tech/${id}`, formData, {
-            headers: { "Content-Type": "multipart/form-data" },
-        });
+    update: async (id: string, data: Partial<Tech>) => {
+        const response = await api.put(`/tech/${id}`, data);
         return response.data;
     },
     delete: async (id: string) => {

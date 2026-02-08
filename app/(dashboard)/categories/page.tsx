@@ -13,38 +13,37 @@ import {
     TableHeader,
     TableRow,
 } from "@/app/components/ui/table";
-import { techService, Tech } from "@/services/techService";
-import Image from "next/image";
+import { categoryService, Category } from "@/services/categoryService";
 
-export default function TechPage() {
-    const [techs, setTechs] = useState<Tech[]>([]);
+export default function CategoriesPage() {
+    const [categories, setCategories] = useState<Category[]>([]);
     const [loading, setLoading] = useState(true);
 
-    const fetchTechs = async () => {
+    const fetchCategories = async () => {
         try {
-            const data = await techService.getAll();
-            setTechs(Array.isArray(data) ? data : []);
+            const data = await categoryService.getAll();
+            setCategories(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error(error);
-            toast.error("Failed to fetch tech stack");
+            toast.error("Failed to fetch categories");
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchTechs();
+        fetchCategories();
     }, []);
 
     const onDelete = async (id: string) => {
-        if (!confirm("Are you sure you want to delete this tech item?")) return;
+        if (!confirm("Are you sure you want to delete this category?")) return;
         try {
-            await techService.delete(id);
-            setTechs((prev) => prev.filter((item) => item._id !== id));
-            toast.success("Tech item deleted successfully");
+            await categoryService.delete(id);
+            setCategories((prev) => prev.filter((item) => item._id !== id));
+            toast.success("Category deleted successfully");
         } catch (error) {
             console.error(error);
-            toast.error("Failed to delete tech item");
+            toast.error("Failed to delete category");
         }
     };
 
@@ -55,8 +54,8 @@ export default function TechPage() {
     return (
         <div className="space-y-4">
             <div className="flex items-center justify-between">
-                <h2 className="text-3xl font-bold tracking-tight">Tech Stack</h2>
-                <Link href="/tech/new">
+                <h2 className="text-3xl font-bold tracking-tight">Categories</h2>
+                <Link href="/categories/new">
                     <Button>
                         <Plus className="mr-2 h-4 w-4" /> Add New
                     </Button>
@@ -66,38 +65,24 @@ export default function TechPage() {
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>Icon</TableHead>
                             <TableHead>Name</TableHead>
-                            <TableHead>Category</TableHead>
                             <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {techs.length === 0 ? (
+                        {categories.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={4} className="h-24 text-center">
+                                <TableCell colSpan={2} className="h-24 text-center">
                                     No results.
                                 </TableCell>
                             </TableRow>
                         ) : (
-                            techs.map((item) => (
+                            categories.map((item) => (
                                 <TableRow key={item._id}>
-                                    <TableCell>
-                                        <div className="relative h-10 w-10 overflow-hidden rounded-md">
-                                            <Image
-                                                src={item.icon}
-                                                alt={item.name}
-                                                fill
-                                                className="object-contain"
-                                                unoptimized
-                                            />
-                                        </div>
-                                    </TableCell>
                                     <TableCell className="font-medium">{item.name}</TableCell>
-                                    <TableCell>{item.category}</TableCell>
                                     <TableCell className="text-right">
                                         <div className="flex items-center justify-end gap-2">
-                                            <Link href={`/tech/${item._id}`}>
+                                            <Link href={`/categories/${item._id}`}>
                                                 <Button variant="ghost" size="icon">
                                                     <Pencil className="h-4 w-4" />
                                                 </Button>

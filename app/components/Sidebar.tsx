@@ -31,6 +31,12 @@ const routes = [
         color: "text-orange-700",
     },
     {
+        label: "Categories",
+        icon: Settings,
+        href: "/categories",
+        color: "text-amber-500",
+    },
+    {
         label: "Tech Stack",
         icon: Settings,
         href: "/tech",

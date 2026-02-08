@@ -8,7 +8,7 @@ export const uploadFile = async (file: File, folder?: string): Promise<string> =
     }
 
     // We post to the backend, which puts it in Cloudinary and returns URL
-    const response = await api.post("/cloudinary/upload", formData, {
+    const response = await api.post("/cloudinary", formData, {
         headers: { "Content-Type": "multipart/form-data" },
     });
 
