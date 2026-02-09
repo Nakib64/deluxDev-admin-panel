@@ -87,15 +87,15 @@ export default function BlogsPage() {
                                         <div className="relative h-12 w-20 overflow-hidden rounded-md">
                                             <Image
                                                 src={item.cover_image}
-                                                alt={item.title}
+                                                alt={item.slug}
                                                 fill
                                                 className="object-cover"
                                                 unoptimized
                                             />
                                         </div>
                                     </TableCell>
-                                    <TableCell className="font-medium">{item.title}</TableCell>
-                                    <TableCell>{item.author_details?.name}</TableCell>
+                                    <TableCell className="font-medium">{item.title.en}</TableCell>
+                                    <TableCell>{item.author}</TableCell>
                                     <TableCell>{item.slug}</TableCell>
                                     <TableCell className="text-right">
                                         <div className="flex items-center justify-end gap-2">

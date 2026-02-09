@@ -1,18 +1,26 @@
 import api from "@/lib/api";
 
+export interface BlogDescSection {
+    type: "heading" | "paragraph";
+    value: string;
+}
+
 export interface Blog {
     _id: string;
-    title: string;
-    title_animation: any; // Object for Lottie
-    cover_image: string;
-    description: Record<string, string>;
-    author_details: {
-        name: string;
-        profile_image: string;
+    title: {
+        en: string;
+        zh: string;
     };
+    title_animation: string;
+    cover_image: string;
+    description: {
+        en: BlogDescSection[];
+        zh: BlogDescSection[];
+    };
+    author: string;
     slug: string;
-    createdAt: string;
-    updatedAt: string;
+    createdAt?: string;
+    updatedAt?: string;
 }
 
 export const blogService = {
@@ -21,7 +29,8 @@ export const blogService = {
         return response.data.data || response.data;
     },
     getOne: async (id: string) => {
-        const response = await api.get(`/blogs/${id}`);
+        // Request raw data for editing (admin panel)
+        const response = await api.get(`/blogs/${id}?raw=true`);
         return response.data.data || response.data;
     },
     create: async (data: Partial<Blog>) => {
