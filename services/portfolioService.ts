@@ -24,7 +24,7 @@ export const portfolioService = {
         return response.data.data || response.data;
     },
     getOne: async (id: string) => {
-        const response = await api.get(`/portfolios/${id}`);
+        const response = await api.get(`/portfolios/${id}?raw=true`);
         return response.data.data || response.data;
     },
     create: async (data: Partial<Portfolio>) => {

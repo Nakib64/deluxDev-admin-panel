@@ -18,7 +18,7 @@ export const reviewService = {
         return response.data.data || response.data;
     },
     getOne: async (id: string) => {
-        const response = await api.get(`/reviews/${id}`);
+        const response = await api.get(`/reviews/${id}?raw=true`);
         return response.data.data || response.data;
     },
     create: async (formData: FormData) => {
