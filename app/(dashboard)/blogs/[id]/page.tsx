@@ -101,52 +101,51 @@ export default function BlogFormPage() {
         try {
             setLoading(true);
 
-            const formData = new FormData();
-            formData.append("title", data.title);
-            formData.append("title_zh", data.title_zh);
-            formData.append("slug", data.slug);
+            // 1. Upload Images
+            let coverImageUrl = data.cover_image;
+            if (coverImageFile) {
+                toast.info("Uploading cover image...");
+                coverImageUrl = await uploadFile(coverImageFile);
+            }
 
-            // Description Maps
+            let authorImageUrl = data.author_profile_image;
+            if (authorImageFile) {
+                toast.info("Uploading author profile image...");
+                authorImageUrl = await uploadFile(authorImageFile);
+            }
+
+            // 2. Prepare Description Maps
             const descriptionMap: Record<string, string> = {};
             data.description.forEach((t) => {
                 if (t.key) descriptionMap[t.key] = t.value;
             });
-            formData.append("description", JSON.stringify(descriptionMap));
 
             const descriptionZhMap: Record<string, string> = {};
             data.description_zh.forEach((t) => {
                 if (t.key) descriptionZhMap[t.key] = t.value;
             });
-            formData.append("description_zh", JSON.stringify(descriptionZhMap));
 
-            // Author Details
-            formData.append("author_details", JSON.stringify({
-                name: data.author_name,
-            }));
+            // 3. Prepare Payload
+            const payload = {
+                title: data.title,
+                title_zh: data.title_zh,
+                slug: data.slug,
+                cover_image: coverImageUrl,
+                description: descriptionMap,
+                description_zh: descriptionZhMap,
+                author_details: {
+                    name: data.author_name,
+                    profile_image: authorImageUrl,
+                },
+                title_animation: data.title_animation ? JSON.parse(data.title_animation) : {},
+            };
 
-            // Handle Files
-            if (coverImageFile) {
-                formData.append("cover_image", coverImageFile);
-            }
-            if (authorImageFile) {
-                formData.append("author_profile_image", authorImageFile);
-            }
-
-            // Animation - could be file or string
-            const animationInput = document.getElementById("lottie-upload") as HTMLInputElement;
-            if (animationInput?.files?.[0]) {
-                formData.append("title_animation", animationInput.files[0]);
-            } else if (data.title_animation && typeof data.title_animation === "string") {
-                // If it's existing URL or manual JSON string... 
-                // The backend expects a file or a JSON string that it might parse.
-                // According to request, it's a .json file.
-            }
-
+            // 4. Submit
             if (isNew) {
-                await blogService.create(formData);
+                await blogService.create(payload);
                 toast.success("Blog created");
             } else {
-                await blogService.update(params.id as string, formData);
+                await blogService.update(params.id as string, payload);
                 toast.success("Blog updated");
             }
             router.push("/blogs");
