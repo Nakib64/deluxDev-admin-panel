@@ -101,11 +101,26 @@ export default function PortfolioFormPage() {
             }
 
             let galleryUrls = [...data.images];
+
             if (galleryFiles.length > 0) {
                 toast.info(`Uploading ${galleryFiles.length} gallery images...`);
-                const uploaded = await Promise.all(galleryFiles.map(f => uploadFile(f)));
-                galleryUrls = [...galleryUrls, ...uploaded];
+
+                for (let i = 0; i < galleryFiles.length; i++) {
+                    const file = galleryFiles[i];
+
+                    toast.loading(`Uploading ${i + 1}/${galleryFiles.length}...`, {
+                        id: "upload-progress",
+                    });
+
+                    const uploadedUrl = await uploadFile(file);
+                    galleryUrls.push(uploadedUrl);
+                }
+
+                toast.success("All images uploaded!", {
+                    id: "upload-progress",
+                });
             }
+
 
             // 2. Payload
             const payload = {
