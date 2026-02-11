@@ -1,0 +1,77 @@
+{
+  "_id": {
+    "$oid": "698b92603096e3d21596989b"
+  },
+  "title": "Pikooly: Fresh Flowers & Gift Delivery Platform",
+  "description": "Pikooly is a modern online flower and gift delivery platform in Bangladesh, offering fresh flowers, beautifully crafted bouquets, and unique gift arrangements for all occasions. The website is designed to be user-friendly, allowing customers to easily browse, select, and order products from the comfort of their homes. With affordable pricing, reliable delivery, and high-quality craftsmanship, Pikooly ensures that every gift is delivered on time and presented with care. The platform aims to make flower shopping simple, convenient, and accessible for everyone.",
+  "title_zh": "Pikooly：鲜花与礼品在线配送平台",
+  "description_zh": "Pikooly 是一家位于孟加拉国的现代化在线鲜花与礼品配送平台，提供新鲜花卉、精美花束以及适用于各种场合的独特礼品设计。该网站操作简单，用户可以在家中轻松浏览、选择并下单。凭借实惠的价格、可靠的配送服务和高品质的工艺，Pikooly 确保每一份礼物都能准时送达并精心呈现。该平台致力于让鲜花购物变得简单、便捷，并适合所有人使用。",
+  "title_image": "http://res.cloudinary.com/dydx7sipg/image/upload/v1770756381/portfolio_uploads/portfolio_uploads.png",
+  "images": [
+    "http://res.cloudinary.com/dydx7sipg/image/upload/v1770756386/portfolio_uploads/portfolio_uploads.png",
+    "http://res.cloudinary.com/dydx7sipg/image/upload/v1770756470/portfolio_uploads/portfolio_uploads.png",
+    "http://res.cloudinary.com/dydx7sipg/image/upload/v1770799321/portfolio_uploads/portfolio_uploads.png"
+  ],
+  "technologies": [
+    {
+      "name": "MongoDB",
+      "image": "http://res.cloudinary.com/dydx7sipg/image/upload/v1770757348/portfolio_uploads/portfolio_uploads.png",
+      "_id": {
+        "$oid": "698b9db3116670c4b8ad1478"
+      }
+    },
+    {
+      "name": "Tailwind CSS",
+      "image": "http://res.cloudinary.com/dydx7sipg/image/upload/v1770757472/portfolio_uploads/portfolio_uploads.png",
+      "_id": {
+        "$oid": "698b9db3116670c4b8ad1479"
+      }
+    },
+    {
+      "name": "TypeScript",
+      "image": "http://res.cloudinary.com/dydx7sipg/image/upload/v1770757519/portfolio_uploads/portfolio_uploads.png",
+      "_id": {
+        "$oid": "698c40dbe7e31eb6bfc06905"
+      }
+    },
+    {
+      "name": "Next.js",
+      "image": "http://res.cloudinary.com/dydx7sipg/image/upload/v1770757377/portfolio_uploads/portfolio_uploads.png",
+      "_id": {
+        "$oid": "698c40dbe7e31eb6bfc06906"
+      }
+    },
+    {
+      "name": "Node.js",
+      "image": "http://res.cloudinary.com/dydx7sipg/image/upload/v1770757399/portfolio_uploads/portfolio_uploads.png",
+      "_id": {
+        "$oid": "698c40dbe7e31eb6bfc06907"
+      }
+    }
+  ],
+  "live_link": "",
+  "github_link": "",
+  "createdAt": {
+    "$date": "2026-02-10T20:17:36.424Z"
+  },
+  "updatedAt": {
+    "$date": "2026-02-11T08:42:03.138Z"
+  },
+  "__v": 0
+}
+
+{
+  "_id": {
+    "$oid": "698b807da5d5ca550dccc7b9"
+  },
+  "name": "Next.js",
+  "icon": "http://res.cloudinary.com/dydx7sipg/image/upload/v1770757377/portfolio_uploads/portfolio_uploads.png",
+  "category": "development",
+  "createdAt": {
+    "$date": "2026-02-10T19:01:17.743Z"
+  },
+  "updatedAt": {
+    "$date": "2026-02-10T21:02:58.537Z"
+  },
+  "__v": 0
+}

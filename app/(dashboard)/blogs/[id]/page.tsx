@@ -78,7 +78,7 @@ export default function BlogFormPage() {
             let coverImageUrl = data.cover_image;
             if (coverImageFile) {
                 toast.info("Uploading cover image...");
-                coverImageUrl = await uploadFile(coverImageFile);
+                coverImageUrl = await uploadFile(coverImageFile, "blogs");
             }
 
             // 2. Upload Lottie if changed

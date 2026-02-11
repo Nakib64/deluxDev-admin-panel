@@ -97,7 +97,7 @@ export default function PortfolioFormPage() {
             let titleImageUrl = data.title_image;
             if (titleImageFile) {
                 toast.info("Uploading title image...");
-                titleImageUrl = await uploadFile(titleImageFile);
+                titleImageUrl = await uploadFile(titleImageFile, "portfolios");
             }
 
             let galleryUrls = [...data.images];
@@ -112,7 +112,7 @@ export default function PortfolioFormPage() {
                         id: "upload-progress",
                     });
 
-                    const uploadedUrl = await uploadFile(file);
+                    const uploadedUrl = await uploadFile(file, "portfolios");
                     galleryUrls.push(uploadedUrl);
                 }
 

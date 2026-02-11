@@ -70,7 +70,7 @@ export default function TechFormPage() {
             let iconUrl = data.icon;
             if (iconFile) {
                 toast.info("Uploading icon...");
-                iconUrl = await uploadFile(iconFile);
+                iconUrl = await uploadFile(iconFile, "tech");
             }
 
             if (!iconUrl) {
