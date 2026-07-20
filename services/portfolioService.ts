@@ -7,7 +7,7 @@ export interface Portfolio {
     title_zh: string;
     description_zh: string;
     title_image: string;
-    images: string[];
+    images: { layout: "full" | "grid-2" | "grid-3" | "grid-4" | "flex"; urls: string[] }[];
     technologies: { name: string; image: string }[];
     live_link?: string;
     github_link?: string;

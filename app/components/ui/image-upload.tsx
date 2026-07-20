@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Upload, X } from "lucide-react";
 import Image from "next/image";
 import { Button } from "./button";
@@ -25,6 +25,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
 }) => {
     const [mounted, setMounted] = useState(false);
     const [previews, setPreviews] = useState<string[]>([]);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         setMounted(true);
@@ -135,13 +136,13 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
                         type="button"
                         disabled={disabled}
                         variant="secondary"
-                        onClick={() => document.getElementById("file-upload")?.click()}
+                        onClick={() => fileInputRef.current?.click()}
                     >
                         <Upload className="h-4 w-4 mr-2" />
                         Select Image
                     </Button>
                     <input
-                        id="file-upload"
+                        ref={fileInputRef}
                         type="file"
                         disabled={disabled}
                         className="hidden"

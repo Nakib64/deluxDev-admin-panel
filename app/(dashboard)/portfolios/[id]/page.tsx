@@ -23,7 +23,7 @@ interface PortfolioFormValues {
     title_zh: string;
     description_zh: string;
     title_image: string;
-    images: string[];
+    images: { layout: "full" | "grid-2" | "grid-3" | "grid-4" | "flex"; urls: string[] }[];
     technologies: { name: string; image: string }[];
     live_link: string;
     github_link: string;
@@ -34,10 +34,6 @@ export default function PortfolioFormPage() {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [availableTechs, setAvailableTechs] = useState<Tech[]>([]);
-
-    // Local File State
-    const [titleImageFile, setTitleImageFile] = useState<File | null>(null);
-    const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
 
     const isNew = params.id === "new";
     const title = isNew ? "Create Portfolio" : "Edit Portfolio";
@@ -93,48 +89,12 @@ export default function PortfolioFormPage() {
         try {
             setLoading(true);
 
-            // 1. Upload Images
-            let titleImageUrl = data.title_image;
-            if (titleImageFile) {
-                toast.info("Uploading title image...");
-                titleImageUrl = await uploadFile(titleImageFile, "portfolios");
-            }
-
-            let galleryUrls = [...data.images];
-
-            if (galleryFiles.length > 0) {
-                toast.info(`Uploading ${galleryFiles.length} gallery images...`);
-
-                for (let i = 0; i < galleryFiles.length; i++) {
-                    const file = galleryFiles[i];
-
-                    toast.loading(`Uploading ${i + 1}/${galleryFiles.length}...`, {
-                        id: "upload-progress",
-                    });
-
-                    const uploadedUrl = await uploadFile(file, "portfolios");
-                    galleryUrls.push(uploadedUrl);
-                }
-
-                toast.success("All images uploaded!", {
-                    id: "upload-progress",
-                });
-            }
-
-
-            // 2. Payload
-            const payload = {
-                ...data,
-                title_image: titleImageUrl,
-                images: galleryUrls,
-            };
-
-            // 3. Submit
+            // 1. Submit
             if (isNew) {
-                await portfolioService.create(payload);
+                await portfolioService.create(data);
                 toast.success("Portfolio created");
             } else {
-                await portfolioService.update(params.id as string, payload);
+                await portfolioService.update(params.id as string, data);
                 toast.success("Portfolio updated");
             }
             router.push("/portfolios");
@@ -169,16 +129,14 @@ export default function PortfolioFormPage() {
                 <BasicInfoSection
                     loading={loading}
                     register={register}
+                    control={control}
                     errors={errors}
                 />
 
                 <ImagesSection
                     loading={loading}
-                    control={control}
                     setValue={setValue}
                     watch={watch}
-                    setTitleImageFile={setTitleImageFile}
-                    setGalleryFiles={setGalleryFiles}
                 />
 
                 <TechnologiesSection
